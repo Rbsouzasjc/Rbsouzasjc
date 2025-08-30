@@ -1,0 +1,177 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyPiNlYNRo4j05CvVOir2HNv",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Rbsouzasjc/Rbsouzasjc/blob/main/analytc_de_sent.py\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "2dbaa8ca"
+      },
+      "source": [
+        "import google.generativeai as genai"
+      ],
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#importar as bibliotecas e gemini\n",
+        "import google.generativeai as genai\n",
+        "from google.colab import userdata\n",
+        "import json\n",
+        "\n",
+        "# usando API armazenada nos segredos do Colab como 'GOOGLE_API_KEY'\n",
+        "GOOGLE_API_KEY = userdata.get('GOOGLE_API_KEY')\n",
+        "genai.configure(api_key=GOOGLE_API_KEY)\n",
+        "\n",
+        "# função para gerar uma resposta de um prompt usando o gemini\n",
+        "def get_completion_gemini(prompt, model=\"gemini-1.5-flash-latest\"):\n",
+        "    # formatar o prompt como  com funçoes,usuário e partes\n",
+        "    messages = [{\"role\": \"user\", \"parts\": [prompt]}]\n",
+        "\n",
+        "    # chamar a API de chat com o modelo especificado, definir mensagens e a temperatura deixei em 0 para teste\n",
+        "    # a API Gemini usa a temperatura de forma igual as do chatgpt\n",
+        "    model_instance = genai.GenerativeModel(model)\n",
+        "    response = model_instance.generate_content(\n",
+        "        messages,\n",
+        "        generation_config=genai.GenerationConfig(temperature=0)\n",
+        "    )\n",
+        "\n",
+        "    # coloquei um input para adcionar e dps retornar o conteúdo da resposta\n",
+        "    # Acesse o texto da resposta\n",
+        "    return response.text\n",
+        "\n",
+        "if __name__ == '__main__':\n",
+        "\n",
+        "    frase = input(\"Digite a frase: \")\n",
+        "\n",
+        "    frase = \"{\" + frase + \"}\"\n",
+        "\n",
+        "    prompt = \"Por favor, realize uma análise profunda e detalhada \"\\\n",
+        "             \"do sentimento expresso na frase delimitada por {}, \"\\\n",
+        "             \"classificando-a como positiva, negativa ou neutra. \"\\\n",
+        "             \"Identifique e liste os sentimentos específicos presentes, \"\\\n",
+        "             \"em sua forma mais simples e direta (palavra primitiva)\" \\\n",
+        "             \"tanto explícitos quanto implícitos, e avalie a intensidade de cada sentimento de 0 (zero) a 100. \"\\\n",
+        "             \"Indique quais palavras-chave na sentença contribuíram \" \\\n",
+        "             \"para os sentimentos identificados. \"\\\n",
+        "             \"Em seguida, sugira possíveis razões para esses sentimentos \"\\\n",
+        "             \"com base no contexto da frase. Por fim, explique como você chegou \" \\\n",
+        "             \"a essas conclusões. Retorne todas essas informações \" \\\n",
+        "             \"no seguinte formato de um objeto JSON: \" \\\n",
+        "             \"{\" \\\n",
+        "                \"'classe': 'classe',\" \\\n",
+        "                \"'sentimentos': {'sentimento': 'intensidade'},\" \\\n",
+        "                \"'contribuicoes': {'palavra/frase': 'sentimento associado'},\" \\\n",
+        "                \"'razoes_possiveis': ['string'],\" \\\n",
+        "                \"'explicacao_modelo': 'string'\" \\\n",
+        "            \"}\"\n",
+        "\n",
+        "\n",
+        "    prompt = prompt + \"\\n\" + frase\n",
+        "\n",
+        "    # Use a função para Gemini get_completion\n",
+        "    response = get_completion_gemini(prompt)\n",
+        "\n",
+        "    # aqui e função e so analisar a resposta como JSON e imprimi-la em txt\n",
+        "    try:\n",
+        "        response_json = json.loads(response)\n",
+        "        print(json.dumps(response_json, indent=4))\n",
+        "    except json.JSONDecodeError:\n",
+        "        print(\"The response is not a valid JSON object:\")\n",
+        "        print(response)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 679
+        },
+        "id": "eItxYAaeKV-j",
+        "outputId": "6c2214af-de6a-4338-9754-8bd67b4ba9e9"
+      },
+      "execution_count": 41,
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Digite a frase: \"O contrato de trabalho perdurou de abril de 2007 a julho de 2019. O trabalhador relatou no processo que, até sofrer um colapso em sua  saúde, em 2015, cumpria extensas jornadas de trabalho, com carga “insuportável e desumana não podendo se desligar das atividades, inclusive em plantões de sobreaviso. Em decorrência do estresse no trabalho, ele apresentou o quadro de depressão e ansiedade que o afastou das atividades por um ano, durante o qual recebeu auxílio-doença acidentário.  A empregadora não compareceu na audiência e, em decorrência, foi aplicada a ela a pena de revelia. A juíza de primeiro grau, Patrícia Iannini, acolheu as conclusões do perito psiquiatra nomeado no processo. Segundo o laudo, o empregado foi acometido de episódio depressivo moderado  e  outros  transtornos  ansiosos. O perito afirmou que  existe relação  de  nexo  concausal  do  quadro  psiquiátrico  apresentado  com  o  trabalho  exercido. A empresa não contestou o laudo. Nesse panorama, a juíza Patrícia condenou a empregadora a pagar ao empregado uma indenização por danos morais, no valor de R$ 20 mil.  As partes recorreram ao TRT-4. O relator do caso na 2ª Turma, desembargador Alexandre Corrêa da Cruz, considerou que cabia à empregadora a organização das atividades e dos processos em seu empreendimento, de modo a não representar fator de agravamento ou desencadeamento de doença psíquica em virtude do acúmulo de trabalho imposto ao trabalhador, o que não fez  Com relação ao valor da indenização, a Turma considerou que as omissões da empregadora são graves, por representarem descumprimento de normas de ordem pública relativas à segurança do trabalho. Nesse sentido, a condenação por danos morais imposta na origem foi majorada para R$ 45 mil A decisão foi unânime no colegiado. Também participaram do julgamento os desembargadores Carlos Alberto May e Marçal Henri dos Santos Figueiredo. A empregadora apresentou recurso de revista contra a decisão\"\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "2025-08-30 22:50:44.658 200 POST /v1beta/models/gemini-1.5-flash-latest:generateContent?%24alt=json%3Benum-encoding%3Dint (127.0.0.1) 7052.16ms\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "The response is not a valid JSON object:\n",
+            "```json\n",
+            "{\n",
+            "  \"classe\": \"negativa\",\n",
+            "  \"sentimentos\": {\n",
+            "    \"sofrimento\": \"80\",\n",
+            "    \"injustiça\": \"70\",\n",
+            "    \"estresse\": \"60\",\n",
+            "    \"ansiedade\": \"50\",\n",
+            "    \"depressão\": \"50\",\n",
+            "    \"culpa\": \"40\",\n",
+            "    \"resignação\": \"30\",\n",
+            "    \"satisfação\": \"20\" \n",
+            "  },\n",
+            "  \"contribuicoes\": {\n",
+            "    \"extensas jornadas de trabalho\": \"sofrimento, estresse\",\n",
+            "    \"carga insuportável e desumana\": \"sofrimento, estresse, injustiça\",\n",
+            "    \"colapso em sua saúde\": \"sofrimento, estresse\",\n",
+            "    \"depressão e ansiedade\": \"sofrimento, ansiedade, depressão\",\n",
+            "    \"afastou das atividades\": \"sofrimento\",\n",
+            "    \"omissões da empregadora são graves\": \"injustiça, culpa\",\n",
+            "    \"descumprimento de normas de ordem pública\": \"injustiça, culpa\",\n",
+            "    \"condenação por danos morais\": \"satisfação, resignação\",\n",
+            "    \"indenização por danos morais\": \"satisfação, resignação\"\n",
+            "  },\n",
+            "  \"razoes_possiveis\": [\n",
+            "    \"O trabalhador sofreu danos à saúde física e mental devido às condições de trabalho desumanas impostas pela empregadora.\",\n",
+            "    \"A empregadora demonstrou negligência e falta de responsabilidade em relação à saúde e segurança do trabalhador.\",\n",
+            "    \"A decisão judicial, embora justa para o trabalhador, reflete a gravidade da situação e a necessidade de maior proteção aos trabalhadores.\",\n",
+            "    \"A indenização, embora majorada, não recupera totalmente o sofrimento e os danos causados ao trabalhador.\"\n",
+            "  ],\n",
+            "  \"explicacao_modelo\": \"A classificação como negativa é predominante devido à descrição das condições de trabalho extremamente desfavoráveis que levaram ao colapso físico e mental do trabalhador.  Termos como \\\"insuportável e desumana\\\", \\\"colapso em sua saúde\\\", \\\"depressão e ansiedade\\\" e a descrição das extensas jornadas de trabalho contribuem fortemente para esse sentimento negativo. A omissão da empregadora e o descumprimento das normas de segurança do trabalho reforçam a percepção de injustiça. Embora a indenização represente uma vitória para o trabalhador, a intensidade do sofrimento e a gravidade da situação minimizam o sentimento de satisfação, resultando em uma classificação geral negativa, com a presença de sentimentos positivos em menor intensidade, representando a resignação e a satisfação parcial com a justiça aplicada.\"\n",
+            "}\n",
+            "```\n",
+            "\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
